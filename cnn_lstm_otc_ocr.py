@@ -44,11 +44,11 @@ class LSTMOCR(object):
 
         with tf.variable_scope('lstm'):
             # [batch_size, max_stepsize, num_features]
-            x = tf.reshape(x, [FLAGS.batch_size, -1, filters[3]])
+            x = tf.reshape(x, [FLAGS.batch_size, -1, filters[4]])
             x = tf.transpose(x, [0, 2, 1])  # batch_size * 64 * 48
             # shp = x.get_shape().as_list()
             # x.set_shape([FLAGS.batch_size, filters[3], shp[1]])
-            x.set_shape([FLAGS.batch_size, filters[3], feature_w * feature_h])
+            x.set_shape([FLAGS.batch_size, filters[4], feature_w * feature_h])
 
             # tf.nn.rnn_cell.RNNCell, tf.nn.rnn_cell.GRUCell
             cell = tf.contrib.rnn.LSTMCell(FLAGS.num_hidden, state_is_tuple=True)
