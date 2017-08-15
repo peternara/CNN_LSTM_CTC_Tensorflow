@@ -26,33 +26,21 @@ class LSTMOCR(object):
         self.merged_summay = tf.summary.merge_all()
 
     def _build_model(self):
-        filters = [64, 128, 128, FLAGS.max_stepsize]
+        filters = [1, 64, 128, 128, FLAGS.max_stepsize]
         strides = [1, 2]
-
+        k_size = [3, 2]
+        x = self.inputs
+        feature_w = FLAGS.image_width
+        feature_h = FLAGS.image_height
         with tf.variable_scope('cnn'):
-            with tf.variable_scope('unit-1'):
-                x = self._conv2d(self.inputs, 'cnn-1', 3, 1, filters[0], strides[0])
-                x = self._batch_norm('bn1', x)
-                x = self._leaky_relu(x, 0.01)
-                x = self._max_pool(x, 2, strides[1])
-
-            with tf.variable_scope('unit-2'):
-                x = self._conv2d(x, 'cnn-2', 3, filters[0], filters[1], strides[0])
-                x = self._batch_norm('bn2', x)
-                x = self._leaky_relu(x, 0.01)
-                x = self._max_pool(x, 2, strides[1])
-
-            with tf.variable_scope('unit-3'):
-                x = self._conv2d(x, 'cnn-3', 3, filters[1], filters[2], strides[0])
-                x = self._batch_norm('bn3', x)
-                x = self._leaky_relu(x, 0.01)
-                x = self._max_pool(x, 2, strides[1])
-
-            with tf.variable_scope('unit-4'):
-                x = self._conv2d(x, 'cnn-4', 3, filters[2], filters[3], strides[0])
-                x = self._batch_norm('bn4', x)
-                x = self._leaky_relu(x, 0.01)
-                x = self._max_pool(x, 2, strides[1])
+            for i in range(0, 4):
+                with tf.variable_scope('unit-%d' % (i + 1)):
+                    x = self._conv2d(x, 'cnn-%d' % (i + 1), k_size[0], filters[i], filters[i+1], strides[0])
+                    x = self._batch_norm('bn%d' % (i + 1), x)
+                    x = self._leaky_relu(x, 0.01)
+                    x = self._max_pool(x, k_size[1], strides[1])
+                    feature_h = (feature_h + 1) // 2
+                    feature_w = (feature_w + 1) // 2
 
         with tf.variable_scope('lstm'):
             # [batch_size, max_stepsize, num_features]
@@ -60,7 +48,7 @@ class LSTMOCR(object):
             x = tf.transpose(x, [0, 2, 1])  # batch_size * 64 * 48
             # shp = x.get_shape().as_list()
             # x.set_shape([FLAGS.batch_size, filters[3], shp[1]])
-            x.set_shape([FLAGS.batch_size, filters[3], 48])
+            x.set_shape([FLAGS.batch_size, filters[3], feature_w * feature_h])
 
             # tf.nn.rnn_cell.RNNCell, tf.nn.rnn_cell.GRUCell
             cell = tf.contrib.rnn.LSTMCell(FLAGS.num_hidden, state_is_tuple=True)
