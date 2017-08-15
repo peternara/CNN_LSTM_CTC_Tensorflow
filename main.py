@@ -106,7 +106,7 @@ def train(train_dir=None, val_dir=None, mode='train'):
                                         model.seq_len: val_seq_len}
 
                             dense_decoded, lastbatch_err, lr = \
-                                sess.run([model.dense_decoded, model.lrn_rate],
+                                sess.run([model.dense_decoded, model.cost, model.lrn_rate],
                                          val_feed)
 
                             # print the decode result
